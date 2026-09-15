@@ -148,7 +148,7 @@ export default function App() {
 
     let view = [
     <div key='0' style={{display:'flex', width:'100%', marginBottom:'16px'}}>
-      <button onClick={() => setTab(4)} style={{border:'none', padding:'20px', backgroundColor:'pink', borderRadius:'16px', marginLeft:'16px'}}>+</button>
+      <button onClick={() => setTab(4)} style={{border:'none', padding:'20px', backgroundColor:'#ffe0e0', borderRadius:'16px', marginLeft:'16px'}}>+</button>
       <p style={{flexGrow:1}}></p>
       <div>
         Filter:
