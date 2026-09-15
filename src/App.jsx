@@ -107,9 +107,9 @@ export default function App() {
 
   function TabButton({text, tabid}) {
     if (tab == tabid) {
-      return <button id="tabbutton" onClick={() => {if (tab != 3) setTab(tabid)}} style={{backgroundColor:"bisque"}}>{text}</button>
+      return <button className="tabbutton" onClick={() => {if (tab != 3) setTab(tabid)}} style={{backgroundColor:"bisque"}}>{text}</button>
     }
-    return <button id="tabbutton" onClick={() => {if (tab != 3) setTab(tabid)}}>{text}</button>
+    return <button className="tabbutton" onClick={() => {if (tab != 3) setTab(tabid)}}>{text}</button>
   }
 
   function FilterButton({text, filterid}) {
@@ -149,7 +149,7 @@ export default function App() {
     let view = [
     <div key='0' style={{display:'flex', width:'100%', marginBottom:'16px'}}>
       <button onClick={() => setTab(4)} style={{border:'none', padding:'20px', backgroundColor:'pink', borderRadius:'16px', marginLeft:'16px'}}>+</button>
-      <p style={{flexGrow:1}}>{memberData.length} Members Found</p>
+      <p style={{flexGrow:1}}></p>
       <div>
         Filter:
         <FilterButton text="Firstname" filterid="0" />
