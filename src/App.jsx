@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import './App.css'
 
 export default function App() {
-  const AUTH_URL = "https://script.google.com/macros/s/AKfycbxhaRcl9o4I6Mqpv6lLjxTR0TmFyahuk0m26vwzoAooYvoF7FnVkyiDsdHvg23be_Xf/exec"
+  const AUTH_URL = "https://script.google.com/macros/s/AKfycbw1zK76CVgbleKQJhx8pThAAG-4TRMn40ezMyWxUksvQdv1qX41xgoNty8n07Ch9rLw/exec"
   const DB_URL = "https://us-west-2.data.tidbcloud.com/api/v1beta/app/dataapp-ZEsnjtEB/endpoint/"
 
   const [tab, setTab] = useState(0)
