@@ -142,7 +142,7 @@ export default function App() {
         <h3>Enter Password</h3>
         <div>
           <label htmlFor='password'>Password</label>
-          <input type="text" name="password" id="password"></input>
+          <input type="password" name="password" id="password"></input>
         </div>
         <br />
         <input type="submit" value="Login"></input>
