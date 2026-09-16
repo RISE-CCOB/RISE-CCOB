@@ -2,9 +2,12 @@ import { useState, useEffect, useRef } from 'react'
 import './App.css'
 
 export default function App() {
-  const URL = "https://script.google.com/macros/s/AKfycby9u2qjfcaTjGRt9zEbS59Fz5amqCJW4766RNZopVbpAGSG7kxSRsM3eYad-Faa5eNG/exec"
+  const AUTH_URL = "https://script.google.com/macros/s/AKfycbxhaRcl9o4I6Mqpv6lLjxTR0TmFyahuk0m26vwzoAooYvoF7FnVkyiDsdHvg23be_Xf/exec"
+  const DB_URL = "https://us-west-2.data.tidbcloud.com/api/v1beta/app/dataapp-ZEsnjtEB/endpoint/"
 
   const [tab, setTab] = useState(0)
+  const [loadMessage, setLoadMessage] = useState("Loading...")
+  const [KEY, setKEY] = useState(0)
 
   const [memberData, setMemberData] = useState([])
   const [loadingMembers, setLoadingMembers] = useState(false)
@@ -22,13 +25,29 @@ export default function App() {
   
 
 
+  async function login(e) {
+    e.preventDefault();
+    setTab(3)
+
+    try {
+      setLoadMessage("Logging in...")
+      const data = new FormData(e.target)
+      const values = Object.fromEntries(data.entries())
+      const response = await fetch(AUTH_URL + "?password=" + values.password)
+      const result = await response.text()
+      setKEY(result)
+    } catch (e) {}
+
+    setTab(0)
+  }
+
   async function getMemberData() {
     try {
       setLoadingMembers(true)
-      console.log("Fetching Members...")
-      const response = await fetch(URL + "?action=getMembers")
+      setLoadMessage("Fetching Members...")
+      const response = await fetch(DB_URL + "getMembers", {headers: {"Authorization": "Basic " + KEY}})
       const result = await response.json()
-      setMemberData(result)
+      setMemberData(result.data.rows)
     } catch (e) {}
     
     setLoadingMembers(false)
@@ -39,20 +58,13 @@ export default function App() {
     setTab(3)
 
     try {
-      console.log("Updating Member...")
+      setLoadMessage("Updating Member...")
       const data = new FormData(e.target)
       const values = Object.fromEntries(data.entries())
-      const params = new URLSearchParams()
-      params.append("action", "updateMember")
-      params.append("id", viewedMember[0])
-      params.append("fname", values.fname)
-      params.append("lname", values.lname)
-      params.append("phone", values.phone)
-      params.append("email", values.email)
-      console.log(URL + "?" + params)
-      const response = await fetch(URL + "?" + params)
+      values["id"] = viewedMember.m_id
+      const response = await fetch(DB_URL + "updateMember", {method: "POST", headers: {"Authorization": "Basic " + KEY, "Content-Type": "application/json"}, body: JSON.stringify(values)})
       const result = await response.json()
-      setMemberData(result)
+      setMemberData(result.data.rows)
     } catch (e) {}
 
     setTab(0)
@@ -63,19 +75,12 @@ export default function App() {
     setTab(3)
 
     try {
-      console.log("Creating Member...")
+      setLoadMessage("Creating Member...")
       const data = new FormData(e.target)
       const values = Object.fromEntries(data.entries())
-      const params = new URLSearchParams()
-      params.append("action", "createMember")
-      params.append("fname", values.fname)
-      params.append("lname", values.lname)
-      params.append("phone", values.phone)
-      params.append("email", values.email)
-      console.log(URL + "?" + params)
-      const response = await fetch(URL + "?" + params)
+      const response = await fetch(DB_URL + "createMember", {method: "POST", headers: {"Authorization": "Basic " + KEY, "Content-Type": "application/json"}, body: JSON.stringify(values)})
       const result = await response.json()
-      setMemberData(result)
+      setMemberData(result.data.rows)
     } catch (e) {}
 
     setTab(0)
@@ -84,7 +89,7 @@ export default function App() {
   async function getEventData() {
     try {
       setLoadingEvents(true)
-      console.log("Fetching Events...")
+      setLoadMessage("Fetching Events...")
       const response = await fetch(URL + "?action=getEvents")
       const result = await response.json()
       setEventData(result)
@@ -96,7 +101,7 @@ export default function App() {
   async function getAttendanceData() {
     try {
       setLoadingAttendance(true)
-      console.log("Fetching Attendance...")
+      setLoadMessage("Fetching Attendance...")
       const response = await fetch(URL + "?action=getAttendance")
       const result = await response.json()
       setAttendanceData(result)
@@ -122,12 +127,28 @@ export default function App() {
   function MemberCard({member}) {
     return (
     <button className="membercard" onClick={() => {setViewedMember(member); setTab(2)}}>
-      <p style={{flexGrow:1, textAlign:'left'}}>{member[1]} {member[2]}</p>
+      <p style={{flexGrow:1, textAlign:'left'}}>{member.fname} {member.lname}</p>
       <div>
-        <p>{member[3]}</p>
-        <p>{member[4]}</p>
+        <p>{member.phone}</p>
+        <p>{member.email}</p>
       </div>
     </button>)
+  }
+
+  // Login view
+  function Login({}) {
+    return <>
+      <form onSubmit={(e) => login(e)}>
+        <h3>Enter Password</h3>
+        <div>
+          <label htmlFor='password'>Password</label>
+          <input type="text" name="password" id="password"></input>
+        </div>
+        <br />
+        <input type="submit" value="Login"></input>
+        <br />
+      </form>
+    </>
   }
 
   // Members view
@@ -162,7 +183,7 @@ export default function App() {
       // sort by first name
       for (let i = 0; i < memberData.length-1; i++) {
         for (let j = i+1; j < memberData.length; j++) {
-          if (memberData[j][1] < memberData[i][1]) {
+          if (memberData[j].fname < memberData[i].fname) {
             let temp = memberData[j]
             memberData[j] = memberData[i]
             memberData[i] = temp
@@ -173,7 +194,7 @@ export default function App() {
       // sort by last name
       for (let i = 0; i < memberData.length-1; i++) {
         for (let j = i+1; j < memberData.length; j++) {
-          if (memberData[j][2] < memberData[i][2]) {
+          if (memberData[j].lname < memberData[i].lname) {
             let temp = memberData[j]
             memberData[j] = memberData[i]
             memberData[i] = temp
@@ -183,7 +204,7 @@ export default function App() {
     }
 
     for (let row of memberData) {
-      view.push(<MemberCard member={row} key={row[0]} />)
+      view.push(<MemberCard member={row} key={row.m_id} />)
     }
 
     return view
@@ -212,23 +233,64 @@ export default function App() {
   function EditMember({}) {
     return <>
       <form onSubmit={(e) => updateMember(e)}>
+        <h3>Student Information</h3>
         <div>
           <label htmlFor="fname">First Name</label>
-          <input type="text" name="fname" defaultValue={viewedMember[1]}></input>
+          <input type="text" name="fname" id="fname" defaultValue={viewedMember.fname} maxLength={255}></input>
         </div>
         <div>
           <label htmlFor="lname">Last Name</label>
-          <input type="text" name="lname" defaultValue={viewedMember[2]}></input>
+          <input type="text" name="lname" id="lname" defaultValue={viewedMember.lname} maxLength={255}></input>
+        </div>
+        <div>
+          <label htmlFor="bday">Birth Date</label>
+          <input type="date" name="bday" id="bday" defaultValue={viewedMember.bday}></input>
+        </div>
+        <h3>Parent Information</h3>
+        <div>
+          <label htmlFor="parent">Full Name</label>
+          <input type="text" name="parent" id="parent" defaultValue={viewedMember.parent} maxLength={255}></input>
         </div>
         <div>
           <label htmlFor="phone">Phone #</label>
-          <input type="text" name="phone" defaultValue={viewedMember[3]}></input>
+          <input type="text" name="phone" id="phone" defaultValue={viewedMember.phone} maxLength={16}></input>
         </div>
         <div>
           <label htmlFor="email">Email</label>
-          <input type="text" name="email" defaultValue={viewedMember[4]}></input>
+          <input type="text" name="email" id="email" defaultValue={viewedMember.email} maxLength={255}></input>
         </div>
+        <div>
+          <label htmlFor="relationship">Relationship to Student</label>
+          <input type="text" name="relationship" id="relationship" defaultValue={viewedMember.relationship} maxLength={255}></input>
+        </div>
+        <h3>Other Information</h3>
+        <div>
+          <label htmlFor="allergy">Allergy, Medical Information</label>
+          <textarea type="text" rows={6} name="allergy" id="allergy" defaultValue={viewedMember.allergy} maxLength={4096}></textarea>
+        </div>
+        <br />
+        <p>Transportation Permission</p>
+        <div style={{placeItems:'left'}}>
+          <input type="radio" className='radio' name="trans" id="transyes" value={1} defaultChecked={viewedMember.trans == 1} />
+          <label htmlFor="transyes" style={{width:'auto', flexGrow:'1'}}>✅ Yes, I give permission for my student to ride in approved transportation for RISE Youth activities.</label>
+        </div>
+        <div style={{placeItems:'left'}}>
+          <input type="radio" className='radio' name="trans" id="transno" value={0} defaultChecked={viewedMember.trans == 0} />
+          <label htmlFor="transno" style={{width:'auto', flexGrow:'1'}}>❌ No, I do not give permission.</label>
+        </div>
+        <br />
+        <p>Media Permission</p>
+        <div style={{placeItems:'left'}}>
+          <input type="radio" className='radio' name="media" id="mediayes" value={1} defaultChecked={viewedMember.media == 1} />
+          <label htmlFor="mediayes" style={{width:'auto', flexGrow:'1'}}>📸 Yes, I give permission for my student to appear in media by RISE Youth and the church.</label>
+        </div>
+        <div style={{placeItems:'left'}}>
+          <input type="radio" className='radio' name="media" id="mediano" value={0} defaultChecked={viewedMember.media == 0} />
+          <label htmlFor="mediano" style={{width:'auto', flexGrow:'1'}}>🚫 No, please do not use photos or videos of my student.</label>
+        </div>
+        <br />
         <input type="submit" value="Update"></input>
+        <br />
       </form>
     </>
   }
@@ -237,28 +299,85 @@ export default function App() {
   function NewMember({}) {
     return <>
       <form onSubmit={(e) => createNewMember(e)}>
+        <p>Welcome to RISE Youth! 🙌 We’re excited for another year of growing in faith, building friendships, serving others, and having a whole lot of fun along the way.</p>
+        <p>This form helps us keep our student and parent information up to date and make sure we have the necessary permissions for youth group activities, transportation, photos/videos, and off-site events.</p>
+        <p>Please take a few minutes to complete the form for each student in your family. Your information will help our leaders care for your student well and keep everyone connected and informed.</p>
+        <p>Thanks for partnering with us as we RISE together! ✝️🔥</p>
+        <h3>Student Information</h3>
         <div>
           <label htmlFor="fname">First Name</label>
-          <input type="text" name="fname"></input>
+          <input type="text" name="fname" id="fname" maxLength={255}></input>
         </div>
         <div>
           <label htmlFor="lname">Last Name</label>
-          <input type="text" name="lname"></input>
+          <input type="text" name="lname" id="lname" maxLength={255}></input>
+        </div>
+        <div>
+          <label htmlFor="bday">Birth Date</label>
+          <input type="date" name="bday" id="bday"></input>
+        </div>
+        <h3>Parent Information</h3>
+        <div>
+          <label htmlFor="parent">Full Name</label>
+          <input type="text" name="parent" id="parent" maxLength={255}></input>
         </div>
         <div>
           <label htmlFor="phone">Phone #</label>
-          <input type="text" name="phone"></input>
+          <input type="text" name="phone" id="phone" maxLength={16}></input>
         </div>
         <div>
           <label htmlFor="email">Email</label>
-          <input type="text" name="email"></input>
+          <input type="text" name="email" id="email" maxLength={255}></input>
         </div>
-        <input type="submit" value="Create"></input>
+        <div>
+          <label htmlFor="relationship">Relationship to Student</label>
+          <input type="text" name="relationship" id="relationship" maxLength={255}></input>
+        </div>
+        <h3>Other Information</h3>
+        <p>Please let us know about any allergies, dietary restrictions, medical conditions, medications, or other important information our youth leaders should be aware of to help keep your student safe and cared for during RISE Youth activities and events.</p>
+        <div>
+          <label htmlFor="allergy">Allergy, Medical Information</label>
+          <textarea type="text" rows={6} name="allergy" id="allergy" maxLength={4096}></textarea>
+        </div>
+        <br />
+        <p>Throughout the year, RISE Youth may attend activities, events, service projects, retreats, and other fun opportunities away from the church. By giving permission below, you are allowing your student to ride in church-approved vehicles or with approved adult drivers when transportation is needed for a youth group activity. We’ll always communicate event details and transportation plans with parents ahead of time.</p>
+        <div style={{placeItems:'left'}}>
+          <input type="radio" className='radio' name="trans" id="transyes" value={1} />
+          <label htmlFor="transyes" style={{width:'auto', flexGrow:'1'}}>✅ Yes, I give permission for my student to ride in approved transportation for RISE Youth activities.</label>
+        </div>
+        <div style={{placeItems:'left'}}>
+          <input type="radio" className='radio' name="trans" id="transno" value={0} />
+          <label htmlFor="transno" style={{width:'auto', flexGrow:'1'}}>❌ No, I do not give permission.</label>
+        </div>
+        <br />
+        <p>RISE Youth loves capturing the fun, friendships, service, and moments God is doing in the lives of our students! With your permission, photos and videos of your student may be used in church or youth ministry communications, including our Instagram, social media, promotional materials, slides, and videos. We’ll always aim to represent our students and ministry in a positive and respectful way.</p>
+        <div style={{placeItems:'left'}}>
+          <input type="radio" className='radio' name="media" id="mediayes" value={1} />
+          <label htmlFor="mediayes" style={{width:'auto', flexGrow:'1'}}>📸 Yes, I give permission for my student to appear in media by RISE Youth and the church.</label>
+        </div>
+        <div style={{placeItems:'left'}}>
+          <input type="radio" className='radio' name="media" id="mediano" value={0} />
+          <label htmlFor="mediano" style={{width:'auto', flexGrow:'1'}}>🚫 No, please do not use photos or videos of my student.</label>
+        </div>
+        <br />
+        <input type="submit" value="Submit"></input>
+        <br />
       </form>
     </>
   }
 
   function MainContent() {
+    if (tab == 3) return <section className="maincontent"><h2>{loadMessage}</h2></section>
+
+    if (KEY.length != 60) {
+      return (
+        <section className="maincontent">
+          <h2>Login</h2>
+          <Login />
+        </section>
+      )
+    }
+
     switch (tab) {
       case 0:
         return (
@@ -281,8 +400,6 @@ export default function App() {
             <EditMember />
           </section>
         )
-      case 3:
-        return <section className="maincontent"><h2>Updating...</h2></section>
       case 4:
         return (
           <section className="maincontent">

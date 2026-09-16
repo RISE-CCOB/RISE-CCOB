@@ -51,7 +51,7 @@
       margin: 0;
       flex-grow: 1;
       border: none;
-      font-size: 24px;
+      font-size: 20px;
       height: 100%;
     }
   }
@@ -91,7 +91,7 @@ h2 {
 form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
   width: 100%;
   place-items: center;
 
@@ -100,10 +100,11 @@ form {
     width: 80%;
 
     label {
-      width: 100px;
+      width: 150px;
       text-align: left;
     }
 
+    textarea,
     input {
       margin: 0 16px;
       border: 0;
@@ -115,6 +116,12 @@ form {
     }
   }
 
+  p {
+    width: 80%;
+    color: gray;
+    margin: 0;
+  }
+
   input {
     margin: 0 16px;
     border: 0;
@@ -124,4 +131,10 @@ form {
     font-size: 16px;
     width: 200px;
   }
+}
+
+.radio {
+  height: 16px;
+  width: 16px;
+  flex-grow: 0;
 }
