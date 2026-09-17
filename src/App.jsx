@@ -24,7 +24,6 @@ const DB_URL = "https://us-west-2.data.tidbcloud.com/api/v1beta/app/dataapp-ZEsn
 
 
 function validateDate(date, useTime) {
-  console.log(date)
   if (useTime) {
     if (date.length == 16) return date
     return '2000-01-01T00:00'
@@ -322,7 +321,54 @@ function EventCalendar({eventData, setViewedEvent, setTab}) {
       rawDetails: event
   }})
 
-  return <Calendar localizer={localizer} events={calendarEvents} startAccessor={'start'} endAccessor={'end'} defaultView='month' views={['month']} components={{event: CalendarCard}} style={{width: '80%', aspectRatio: '7/5'}} popup={true} />
+  return <Calendar localizer={localizer} events={calendarEvents} startAccessor={'start'} endAccessor={'end'} defaultView='month' views={['month']} components={{event: CalendarCard}} style={{width: '80%', aspectRatio: '5/4'}} popup={true} />
+}
+
+function Birthdays({memberData}) {
+  const birthdays = []
+  const today = new Date()
+  const nextMonth = new Date()
+  nextMonth.setDate(nextMonth.getDate() + 30)
+
+  const s = new Date(2000, today.getMonth(), today.getDate());
+  let e = new Date(2000, nextMonth.getMonth(), nextMonth.getDate());
+  let wrapped = false
+
+  if (s > e) {
+    e.setFullYear(REF_YEAR + 1); // Move end date to the next year
+    wrapped = true
+  }
+
+  for (let member of memberData) {
+    const birthDate = new Date(member.bday)
+    const birthDay = new Date(2000, birthDate.getMonth(), birthDate.getDate());
+    if (wrapped && birthDay < s) {
+      birthDay.setFullYear(REF_YEAR + 1);
+    }
+
+    console.log(s, e, birthDay)
+
+    if (birthDay >= s && birthDay <= e) {
+      birthdays.push(member)
+    }
+  }
+
+  if (birthdays.length > 0) {
+    const birthdayList = []
+
+    for (let member of birthdays) {
+      const birthdayDate = new Date(member.bday)
+      birthdayDate.setHours(0,0,0,0)
+      const dateString = birthdayDate.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric'
+      })
+
+      birthdayList.push(<div key={member.m_id}>🎂 {member.fname} {member.lname} - {dateString}</div>)
+    }
+
+    return <div style={{width:'100%', marginBottom:'16px'}}><h3 key='h1' style={{backgroundColor:'white', width:'100%', padding:'16px'}}>Upcoming Birthdays</h3>{birthdayList}</div>
+  }
 }
 
 
@@ -360,11 +406,12 @@ function Members({membersFetched, getMemberData, loadingMembers, memberData, set
     <button onClick={() => setTab(4)} className='filterbutton' style={{backgroundColor: 'bisque', boxShadow: '0 0 3px'}}>Add Member</button>
     <p style={{flexGrow:1}}></p>
     <div>
-      Filter:
+      Sort:
       <FilterButton text="Firstname" highlight={membersFilter == 0} onClick={() => {setMembersFilter(0)}} />
       <FilterButton text="Lastname" highlight={membersFilter == 1} onClick={() => {setMembersFilter(1)}} />
     </div>
-  </div>
+  </div>,
+  <Birthdays memberData={memberData} />
   ]
 
   if (loadingMembers) {
@@ -447,7 +494,7 @@ function Events({getEventData, eventData, setTab, setViewedEvent, setLoadMessage
     const current_date = year + "-" + month + "-" + day
 
     // Coming events
-    view.push(<h3 key='h1'>Upcoming Events</h3>)
+    view.push(<h3 key='h1' style={{backgroundColor:'white', width:'100%', padding:'16px'}}>Upcoming Events</h3>)
     for (let i = eventData.length-1; i >= 0; i--) {
       const row = eventData[i]
       if (row.event_date.slice(0, 10) >= current_date) {
@@ -456,7 +503,7 @@ function Events({getEventData, eventData, setTab, setViewedEvent, setLoadMessage
     }
 
     // Past events
-    view.push(<h3 key='h2'>Past Events</h3>)
+    view.push(<h3 key='h2' style={{backgroundColor:'white', width:'100%', padding:'16px'}}>Past Events</h3>)
     for (let row of eventData) {
       if (row.event_date.slice(0, 10) < current_date) {
         view.push(<EventCard event={row} key={row.e_id} setViewedEvent={setViewedEvent} setTab={setTab} />)
@@ -678,9 +725,8 @@ function EditEvent({updateEvent, viewedEvent, setTab, setLoadMessage, KEY, setEv
   </>
 }
 
-function MainContent({tab, setTab}) {
+function MainContent({tab, setTab, KEY, setKEY}) {
   const [loadMessage, setLoadMessage] = useState("Loading...")
-  const [KEY, setKEY] = useState(0)
 
   const [memberData, setMemberData] = useState([])
   const [loadingMembers, setLoadingMembers] = useState(false)
@@ -754,6 +800,10 @@ function MainContent({tab, setTab}) {
 
 export default function App() {
   const [tab, setTab] = useState(0)
+  const [KEY, setKEY] = useState(0)
+
+  let footerDisplay = 'none'
+  if (KEY.length == 60) footerDisplay = 'flex'
 
   return (
     <>
@@ -761,8 +811,8 @@ export default function App() {
         <div id="titlebar">
           <h1>RISE</h1>
         </div>
-        <MainContent tab={tab} setTab={setTab} />
-        <nav id="footermenu">
+        <MainContent tab={tab} setTab={setTab} KEY={KEY} setKEY={setKEY} />
+        <nav id="footermenu" style={{display:footerDisplay}}>
           <ul id="footertabs">
             <li>
               <TabButton text="Members" tabid={0} tab={tab} setTab={setTab} />
