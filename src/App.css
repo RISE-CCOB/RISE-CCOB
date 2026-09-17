@@ -15,6 +15,8 @@
   display: flex;
   place-items: center;
   justify-content: center;
+  box-shadow: 0 4px 4px -2px;
+  z-index: 9999;
 }
 
 .maincontent {
@@ -25,15 +27,15 @@
 }
 
 #footermenu {
-  background-color:black;
   width: 100%;
   min-height: 70px;
   display: flex;
+  box-shadow: 0 -4px 4px -2px;
+  z-index: 9999;
 }
 
 #footertabs {
   display: flex;
-  background-color: aqua;
   flex-grow: 1;
   min-height: 100%;
   margin: 0;
@@ -43,7 +45,6 @@
   li {
     height: 100%;
     flex-grow: 1;
-    background-color: purple;
     margin: 0;
     display: flex;
 
@@ -53,12 +54,13 @@
       border: none;
       font-size: 20px;
       height: 100%;
+      background-color:azure;
     }
   }
 }
 
 h2 {
-  background-color: aliceblue;
+  background-color:;
   padding: 4px 0 8px;
   width: 100%;
 }
@@ -84,7 +86,7 @@ h2 {
   border: none;
   padding: 8px;
   border-radius: 8px;
-  margin: 0 4px;
+  margin: 0 4px 0 8px;
   background-color: transparent;
 }
 
@@ -137,4 +139,54 @@ form {
   height: 16px;
   width: 16px;
   flex-grow: 0;
+}
+
+.attendanceCard {
+  justify-content: left;
+  width: 100%;
+}
+
+.attendanceCard:hover {
+  background-color:aquamarine;
+}
+
+input[type="checkbox"] {
+  /* Remove default browser styling */
+  appearance: none;
+  -webkit-appearance: none;
+  
+  /* Create the circular radio button outer shell */
+  width: 18px;
+  height: 18px;
+  border: 2px solid #555;
+  border-radius: 50%; /* Makes it a circle */
+  outline: none;
+  background-color: #fff;
+  cursor: pointer;
+  
+  /* Align it inline with your text alignment */
+  display: inline-grid;
+  place-content: center;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+/* Style the checkbox when it is checked */
+input[type="checkbox"]:checked {
+  border-color:orange; /* Optional: Change border color when selected */
+}
+
+/* Create the inner dot for the checked state */
+input[type="checkbox"]:checked::before {
+  content: "";
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color:orange; /* Color of the inner dot */
+}
+
+/* Accessibility: Add a focus ring for keyboard users */
+input[type="checkbox"]:focus-visible {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
 }
