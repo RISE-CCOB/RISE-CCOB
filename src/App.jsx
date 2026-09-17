@@ -1,3 +1,5 @@
+// Attendance and planning app for RISE youth, CCOB
+
 import { useState, useEffect, useRef } from 'react'
 import { Calendar, dateFnsLocalizer } from 'react-big-calendar'
 import format from 'date-fns/format'
